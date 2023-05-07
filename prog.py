@@ -110,7 +110,7 @@ while running:
     events = pygame.event.get()
     checkquit(events)
     if pause:
-        x = 2
+        continue
     elif i<COLS:
         print(f"---------------iteration {k}------------------")
         generate(i,j)
@@ -118,5 +118,5 @@ while running:
         pygame.display.update()
         k += 1
     else:
-        beef = "shnee"
+        continue
     dt = clock.tick(144) / 1000
