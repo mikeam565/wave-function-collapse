@@ -5,19 +5,22 @@ import random
 from collections import Counter
 import time
 
+# start pygame
 pygame.init()
+
+# CONSTANTS
 LENGTH = 1000
 HEIGHT = 1000
-TILE_WIDTH = 5
+TILE_WIDTH = 10
 COLS = LENGTH // TILE_WIDTH
 ROWS = LENGTH // TILE_WIDTH
-
 STARTING_X = 0
 STARTING_Y = 0
-
 # STARTING_X = COLS//2
 # STARTING_Y = ROWS//2
+STARTING_TERRAIN = tile.TREES
 
+# Some vars
 screen = pygame.display.set_mode((LENGTH,HEIGHT))
 clock = pygame.time.Clock()
 running = True
@@ -27,6 +30,7 @@ terrain_grid = [[0]*COLS for _ in range(ROWS)]
 n = len(terrain_grid)
 m = len(terrain_grid[0])
 
+# Populate 2D grid with Tile objects
 for i in range(n):
     for j in range(m):
         x = i*TILE_WIDTH
@@ -34,15 +38,13 @@ for i in range(n):
         newTile = Tile("NONE", x, y, TILE_WIDTH)
         terrain_grid[i][j] = newTile
 
-terrain_grid[STARTING_X][STARTING_Y].terrain_type = tile.TREES
-
 # Function that returns all the adjacent elements
 def getAdjacent(i, j):
     global terrain_grid
     v = []
     for dx in range (-1 if (i > 0) else 0 , 2 if (i < n-1) else 1):
         for dy in range( -1 if (j > 0) else 0,2 if (j < m-1) else 1):
-            if (dx is not 0 or dy is not 0):
+            if (dx != 0 or dy != 0):
                 v.append(terrain_grid[i + dx][j + dy])
     return v
 
@@ -78,8 +80,6 @@ def generate(i,j):
     for prob in probabilities:
         probabilities[prob] = probabilities[prob] / len(adj)
 
-    # terrain_grid[i][j].terrain_type = random.choice(keepVals)
-
     terrain_grid[i][j].terrain_type = random.choices(list(probabilities.keys()), probabilities.values(), k=1)[0]
 
 # Render terrain
@@ -104,21 +104,20 @@ def checkquit(e):
         if ev.type == pygame.KEYDOWN and ev.key == pygame.K_p:
             pause = not pause
 
+# Generate and render first tile
+terrain_grid[STARTING_X][STARTING_Y].terrain_type = STARTING_TERRAIN
+render(STARTING_X, STARTING_Y)
 
+### Pre-render all, going sequentially (only works with starting at 0,0)
 render(0,0)
 for i in range(n):
     for j in range(m):
         if not (i==0 and j==0):
-            offset_i = i+STARTING_X
-            if offset_i >= COLS:
-                offset_i = offset_i - COLS
-            offset_j = j+STARTING_Y
-            if offset_j >= ROWS:
-                offset_j = offset_j - ROWS
-            generate(offset_i,offset_j)
-            render(offset_i,offset_j)
+            generate(i,j)
+            render(i,j)
 
-### Just update screen after rendering it all
+
+### update screen after rendering it all
 while running:
     events = pygame.event.get()
     checkquit(events)
@@ -129,7 +128,7 @@ while running:
         continue
     dt = clock.tick(60) / 1000
 
-### See it happening (btw this double generates the first tile at 0,0)
+### See it happening in game loop (btw this currently double generates the first tile at 0,0)
 # i = STARTING_X
 # j = STARTING_Y
 # k = 1
