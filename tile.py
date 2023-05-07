@@ -6,18 +6,20 @@ TREES = "trees"
 DENSE_TREES = "dense_trees"
 WATER = "water"
 DEEP_WATER = "deep_water"
+CLIFF = "cliff"
 
-### Terrain colors
+## Terrain colors
 colors = {
     GRASSLAND: "green2",
     SAND: "tan",
     TREES: "green4",
     DENSE_TREES: "darkgreen",
     WATER: "blue",
-    DEEP_WATER: "darkblue"
+    DEEP_WATER: "darkblue",
+    CLIFF: "brown"
 }
 
-### Other colors for fun
+# ### Other colors for fun
 # colors = {
 #     GRASSLAND: "yellow",
 #     SAND: "green",
@@ -30,14 +32,14 @@ colors = {
 
 adjacency = {
     GRASSLAND: {
-        GRASSLAND: 0.9,
-        TREES: 0.05,
-        SAND: 0.05
+        GRASSLAND: 0.6,
+        TREES: 0.2,
+        SAND: 0.2
     },
     SAND: {
-        SAND: 0.7,
-        GRASSLAND: 0.1,
-        WATER: 0.2
+        SAND: 0.5,
+        GRASSLAND: 0.25,
+        WATER: 0.25
     },
     TREES: {
         TREES: 0.5,
@@ -45,17 +47,25 @@ adjacency = {
         DENSE_TREES: 0.25
     },
     DENSE_TREES: {
-        DENSE_TREES: 0.9,
-        TREES: 0.1,
+        DENSE_TREES: 0.8,
+        TREES: 0.2,
     },
     WATER: {
-        WATER: 0.8,
-        DEEP_WATER: 0.15,
-        SAND: 0.05
+        WATER: 0.6,
+        DEEP_WATER: 0.2,
+        SAND: 0.3
     },
     DEEP_WATER: {
         DEEP_WATER: 0.9,
         WATER: 0.1
+    },
+    CLIFF: {
+        GRASSLAND:1,
+        SAND:1,
+        TREES:1,
+        DENSE_TREES:1,
+        WATER:1,
+        DEEP_WATER:1
     },
     "NONE": {
         GRASSLAND: 0,

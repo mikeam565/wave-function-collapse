@@ -11,20 +11,22 @@ pygame.init()
 # CONSTANTS
 LENGTH = 1000
 HEIGHT = 1000
-TILE_WIDTH = 10
+TILE_WIDTH = 5
 COLS = LENGTH // TILE_WIDTH
 ROWS = LENGTH // TILE_WIDTH
-STARTING_X = 0
-STARTING_Y = 0
-# STARTING_X = COLS//2
-# STARTING_Y = ROWS//2
+# STARTING_X = 0
+# STARTING_Y = 0
+STARTING_X = COLS//2
+STARTING_Y = ROWS//2
 STARTING_TERRAIN = tile.TREES
+BRUSH_WIDTH = 10
 
 # Some vars
 screen = pygame.display.set_mode((LENGTH,HEIGHT))
 clock = pygame.time.Clock()
 running = True
 pause = False
+mouse_down = False
 dt = 0
 terrain_grid = [[0]*COLS for _ in range(ROWS)]
 n = len(terrain_grid)
@@ -52,7 +54,15 @@ def getAdjacent(i, j):
 # Generate terrain from possible values
 def generate(i,j):
     global terrain_grid
+    if terrain_grid[i][j].terrain_type != "NONE" or i>ROWS or j>COLS or i<0 or j<0:
+        return
     adj = getAdjacent(i,j)
+    allNone = True
+    for a in adj:
+        if a.terrain_type != "NONE":
+            allNone = False
+    if allNone:
+        return
     adj.append(terrain_grid[i][j])
     target = len(adj) # I want len(adj) occurrences of a terrain for it to be considered viable
     allAdj = []
@@ -85,12 +95,14 @@ def generate(i,j):
 # Render terrain
 def render(i, j):
     global terrain_grid
+    if terrain_grid[i][j].terrain_type == "NONE" or i>ROWS or j>COLS or i<0 or j<0:
+        return
     curr = terrain_grid[i][j]
     color = tile.colors[curr.terrain_type]
     pygame.draw.rect(screen, color, curr.rect)
 
-def checkquit(e):
-    global running, pause
+def checkinput(e):
+    global running, pause, mouse_down
     for ev in e:
         if ev.type == pygame.QUIT:
             exit(0)
@@ -103,30 +115,170 @@ def checkquit(e):
                 running = True
         if ev.type == pygame.KEYDOWN and ev.key == pygame.K_p:
             pause = not pause
+        if ev.type == pygame.MOUSEBUTTONDOWN:
+            mouse_down = True
+        elif ev.type == pygame.MOUSEBUTTONUP:
+            mouse_down = False
+
+
+def findNextCoordinates1(terrain_grid, i,j):
+    temp_i = i
+    temp_j = j
+    max_dx = [0]
+    max_dy = [0]
+    maxPopulated = [0]
+    # Check right
+    this_dx = 1
+    this_dy = 0
+    temp_i = i + this_dx
+    temp_j = j + this_dy
+    if temp_i < COLS:
+        if terrain_grid[temp_i][temp_j].terrain_type == "NONE":
+            v = getAdjacent(temp_i, temp_j)
+            countPopulated = 0
+            for tle in v:
+                if tle.terrain_type != "NONE":
+                    countPopulated += 1
+            if countPopulated > maxPopulated[-1]:
+                max_dx.append(this_dx)
+                max_dy.append(this_dy)
+                maxPopulated.append(countPopulated)
+    # Check down
+    this_dx = 0
+    this_dy = 1
+    temp_i = i + this_dx
+    temp_j = j + this_dy
+    if temp_j < ROWS:
+        if terrain_grid[temp_i][temp_j].terrain_type == "NONE":
+            v = getAdjacent(temp_i, temp_j)
+            countPopulated = 0
+            for tle in v:
+                if tle.terrain_type != "NONE":
+                    countPopulated += 1
+            if countPopulated > maxPopulated[-1]:
+                max_dx.append(this_dx)
+                max_dy.append(this_dy)
+                maxPopulated.append(countPopulated)
+    # Check left
+    this_dx = -1
+    this_dy = 0
+    temp_i = i + this_dx
+    temp_j = j + this_dy
+    if temp_i >= 0:
+        if terrain_grid[temp_i][temp_j].terrain_type == "NONE":
+            v = getAdjacent(temp_i, temp_j)
+            countPopulated = 0
+            for tle in v:
+                if tle.terrain_type != "NONE":
+                    countPopulated += 1
+            if countPopulated > maxPopulated[-1]:
+                max_dx.append(this_dx)
+                max_dy.append(this_dy)
+                maxPopulated.append(countPopulated)
+    # Check up
+    this_dx = 0
+    this_dy = -1
+    temp_i = i + this_dx
+    temp_j = j + this_dy
+    if temp_j >= 0:
+        if terrain_grid[temp_i][temp_j].terrain_type == "NONE":
+            v = getAdjacent(temp_i, temp_j)
+            countPopulated = 0
+            for tle in v:
+                if tle.terrain_type != "NONE":
+                    countPopulated += 1
+            if countPopulated > maxPopulated[-1]:
+                max_dx.append(this_dx)
+                max_dy.append(this_dy)
+                maxPopulated.append(countPopulated)
+    # # Introduce small chance the second best is option is picked
+    # choice = random.randint(1,10)
+    # if choice <= 2 and len(max_dx)>1:
+    #     return (i+max_dx[-2],j+max_dy[-2])
+    # else:
+    #     return (i+max_dx[-1],j+max_dy[-1])
+    return (i+max_dx[-1],j+max_dy[-1])
+
+        
+
 
 # Generate and render first tile
 terrain_grid[STARTING_X][STARTING_Y].terrain_type = STARTING_TERRAIN
 render(STARTING_X, STARTING_Y)
 
-### Pre-render all, going sequentially (only works with starting at 0,0)
-render(0,0)
-for i in range(n):
-    for j in range(m):
-        if not (i==0 and j==0):
-            generate(i,j)
-            render(i,j)
+# ### Pre-render all, going sequentially (only works with starting at 0,0)
+# render(0,0)
+# for i in range(n):
+#     for j in range(m):
+#         if not (i==0 and j==0):
+#             generate(i,j)
+#             render(i,j)
 
+# ### Attempt at writing explorative i,j designator
+# i = STARTING_X
+# j = STARTING_Y
+# flipped = ROWS*COLS - 1 # minus 1 since we already populated one
+# k = 1
+# while running:
+#     events = pygame.event.get()
+#     checkinput(events)
+#     if pause:
+#         continue
+#     elif k<(ROWS*COLS-1):
+#         print(f"------------iteration {k}--------")
+#         generate(i,j)
+#         render(i,j)
+#         pygame.display.update()
+#         (i,j) = findNextCoordinates1(terrain_grid,i,j)
+#         print(f"New coordinates {i=},{j=}")
+#         k+=1
+#     else:
+#         continue
+#     dt = clock.tick(144) / 1000
 
-### update screen after rendering it all
+i = -1
+j = -1
 while running:
     events = pygame.event.get()
-    checkquit(events)
+    checkinput(events)
     if pause:
         continue
     else:
-        pygame.display.update()
-        continue
+        if mouse_down:
+            x, y = pygame.mouse.get_pos()
+            i = x // TILE_WIDTH
+            j = y // TILE_WIDTH
+            for a in range(i-BRUSH_WIDTH,i+BRUSH_WIDTH):
+                for b in range(j-BRUSH_WIDTH,j+BRUSH_WIDTH):
+                    try:
+                        generate(a,b)
+                        render(a,b)
+                    except Exception as e:
+                        print(f"Error trying to generate at {a=}, {b=}")
+                        print(e)
+                        print("Filling errant spot with border tile...")
+                        try:
+                            terrain_grid[a][b].terrain_type = tile.CLIFF
+                            render(a,b)
+                        except Exception as e:
+                            print(f"Irresolvable error at {a=},{b=}")
+                            print(e)
+            pygame.display.update()
     dt = clock.tick(60) / 1000
+
+            
+
+
+# ### update screen after rendering it all
+# while running:
+#     events = pygame.event.get()
+#     checkinput(events)
+#     if pause:
+#         continue
+#     else:
+#         pygame.display.update()
+#         continue
+#     dt = clock.tick(60) / 1000
 
 ### See it happening in game loop (btw this currently double generates the first tile at 0,0)
 # i = STARTING_X
@@ -137,7 +289,7 @@ while running:
 #     i = k // COLS
 #     j = k % COLS
 #     events = pygame.event.get()
-#     checkquit(events)
+#     checkinput(events)
 #     if pause:
 #         continue
 #     elif i<COLS:
