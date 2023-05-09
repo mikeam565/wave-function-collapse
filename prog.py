@@ -4,6 +4,7 @@ from tile import Tile, adjacency
 import random
 from collections import Counter
 import time
+import math
 
 # start pygame
 pygame.init()
@@ -20,6 +21,7 @@ STARTING_X = COLS//2
 STARTING_Y = ROWS//2
 STARTING_TERRAIN = tile.TREES
 BRUSH_WIDTH = 10
+countFilled = 1
 
 # Some vars
 screen = pygame.display.set_mode((LENGTH,HEIGHT))
@@ -53,7 +55,7 @@ def getAdjacent(i, j):
 
 # Generate terrain from possible values
 def generate(i,j):
-    global terrain_grid
+    global terrain_grid, countFilled
     if terrain_grid[i][j].terrain_type != "NONE" or i>ROWS or j>COLS or i<0 or j<0:
         return
     adj = getAdjacent(i,j)
@@ -91,6 +93,7 @@ def generate(i,j):
         probabilities[prob] = probabilities[prob] / len(adj)
 
     terrain_grid[i][j].terrain_type = random.choices(list(probabilities.keys()), probabilities.values(), k=1)[0]
+    countFilled += 1
 
 # Render terrain
 def render(i, j):
@@ -238,33 +241,50 @@ render(STARTING_X, STARTING_Y)
 
 i = -1
 j = -1
+player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 while running:
     events = pygame.event.get()
     checkinput(events)
     if pause:
         continue
     else:
-        if mouse_down:
-            x, y = pygame.mouse.get_pos()
-            i = x // TILE_WIDTH
-            j = y // TILE_WIDTH
-            for a in range(i-BRUSH_WIDTH,i+BRUSH_WIDTH):
-                for b in range(j-BRUSH_WIDTH,j+BRUSH_WIDTH):
-                    try:
-                        generate(a,b)
-                        render(a,b)
-                    except Exception as e:
-                        print(f"Error trying to generate at {a=}, {b=}")
-                        print(e)
-                        print("Filling errant spot with border tile...")
+        if countFilled < (COLS*ROWS): # 
+            if mouse_down:
+                x, y = pygame.mouse.get_pos()
+                i = x // TILE_WIDTH
+                j = y // TILE_WIDTH
+                for a in range(i-BRUSH_WIDTH,i+BRUSH_WIDTH):
+                    for b in range(j-BRUSH_WIDTH+abs(i-a),j+BRUSH_WIDTH-abs(i-a)):
                         try:
-                            terrain_grid[a][b].terrain_type = tile.CLIFF
+                            generate(a,b)
                             render(a,b)
                         except Exception as e:
-                            print(f"Irresolvable error at {a=},{b=}")
+                            print(f"Error trying to generate at {a=}, {b=}")
                             print(e)
-            pygame.display.update()
-    dt = clock.tick(60) / 1000
+                            print("Filling errant spot with border tile...")
+                            try:
+                                terrain_grid[a][b].terrain_type = tile.CLIFF
+                                render(a,b)
+                                countFilled += 1
+                            except Exception as e:
+                                print(f"Irresolvable error at {a=},{b=}")
+                                print(e)
+        # else:
+        #     # put a lil guy down
+        #     pygame.draw.circle(screen, "red", player_pos, TILE_WIDTH//2)
+        #     if pygame.mouse.get_pressed()[2]:
+        #         print("MOVING")
+        #         # Get dx and dy to location
+        #         x2,y2 = pygame.mouse.get_pos()
+        #         dx = x2 - player_pos.x
+        #         dy = y2 - player_pos.y
+        #         angle = math.atan2(dy,dx)
+        #         player_pos.x += dt*math.cos(angle)*300
+        #         player_pos.y += dt*math.sin(angle)*300
+
+                
+        pygame.display.update()
+    dt = clock.tick(144) / 1000
 
             
 

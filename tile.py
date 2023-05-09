@@ -32,9 +32,9 @@ colors = {
 
 adjacency = {
     GRASSLAND: {
-        GRASSLAND: 0.6,
-        TREES: 0.2,
-        SAND: 0.2
+        GRASSLAND: 0.8,
+        TREES: 0.1,
+        SAND: 0.1
     },
     SAND: {
         SAND: 0.5,
@@ -51,9 +51,9 @@ adjacency = {
         TREES: 0.2,
     },
     WATER: {
-        WATER: 0.6,
-        DEEP_WATER: 0.2,
-        SAND: 0.3
+        WATER: 0.8,
+        DEEP_WATER: 0.12,
+        SAND: 0.08
     },
     DEEP_WATER: {
         DEEP_WATER: 0.9,
