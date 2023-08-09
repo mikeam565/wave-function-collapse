@@ -360,7 +360,7 @@ def live_draw():
 def path_heuristic(t1, t2):
     return abs(t1.x - t2.x) + abs(t1.y - t2.y)
 
-# TODO: Implement pathfinding
+# ref: https://www.redblobgames.com/pathfinding/a-star/introduction.html
 def findPath(i1,j1,i2,j2):
     global terrain_grid
     global player_pos
