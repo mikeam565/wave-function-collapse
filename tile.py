@@ -19,15 +19,27 @@ colors = {
     CLIFF: "brown"
 }
 
-# ### Other colors for fun
+### Other colors for fun
 # colors = {
 #     GRASSLAND: "yellow",
 #     SAND: "green",
 #     TREES: "orange",
 #     DENSE_TREES: "red",
 #     WATER: "blue",
-#     DEEP_WATER: "indigo"
+#     DEEP_WATER: "indigo",
+#     CLIFF: "violet"
 # }
+
+WALKABLE = [GRASSLAND, SAND]
+MOVEMENT_COSTS = {
+    GRASSLAND: 1,
+    SAND: 1,
+    TREES: 5,
+    DENSE_TREES: 20,
+    WATER: 999,
+    DEEP_WATER: 999,
+    CLIFF: 999
+}
 
 
 adjacency = {
@@ -79,9 +91,10 @@ adjacency = {
 
 class Tile:
 
-    def __init__(self, terrain_type, x, y, width):
-        # print(f"Tile created at ({x},{y}) with terrain {terrain_type} and width {width}")
+    def __init__(self, terrain_type, i, j, x, y, width):
         self.terrain_type = terrain_type
+        self.i = i
+        self.j = j
         self.x = x
         self.y = y
         self.width = width
@@ -97,3 +110,6 @@ class Tile:
     def setY(self, y):
         self.y = y
         self.rect.top = y
+
+    def __lt__(self, other):
+        return MOVEMENT_COSTS[self.terrain_type] < MOVEMENT_COSTS[other.terrain_type]
