@@ -19,7 +19,7 @@ pygame.init()
 # CONSTANTS
 LENGTH = 1000
 HEIGHT = 1000
-TILE_WIDTH = 10
+TILE_WIDTH = 20
 COLS = LENGTH // TILE_WIDTH
 ROWS = LENGTH // TILE_WIDTH
 # STARTING_X = 0
@@ -284,7 +284,7 @@ def user_draw():
         if pause:
             continue
         else:
-            if countFilled < (COLS*ROWS)-100: # 
+            if countFilled < (COLS*ROWS)-6: # 
                 if mouse_down:
                     x, y = pygame.mouse.get_pos()
                     i = x // TILE_WIDTH
