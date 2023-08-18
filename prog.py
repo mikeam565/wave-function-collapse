@@ -19,7 +19,7 @@ pygame.init()
 # CONSTANTS
 LENGTH = 1000
 HEIGHT = 1000
-TILE_WIDTH = 20
+TILE_WIDTH = 10
 COLS = LENGTH // TILE_WIDTH
 ROWS = LENGTH // TILE_WIDTH
 # STARTING_X = 0
@@ -396,7 +396,7 @@ render(STARTING_X, STARTING_Y)
 #################################################################################################
 
 ### Render in quadrants from STARTING_X, _Y
-render_screen()
+# render_screen()
 # update_screen_with_pause()
 
 ### Draw in order live
