@@ -38,7 +38,8 @@ MOVEMENT_COSTS = {
     DENSE_TREES: 20,
     WATER: 999,
     DEEP_WATER: 999,
-    CLIFF: 999
+    CLIFF: 999,
+    None: 9999
 }
 
 

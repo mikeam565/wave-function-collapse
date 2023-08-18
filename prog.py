@@ -284,7 +284,7 @@ def user_draw():
         if pause:
             continue
         else:
-            if countFilled < (COLS*ROWS)-2: # 
+            if countFilled < (COLS*ROWS)-100: # 
                 if mouse_down:
                     x, y = pygame.mouse.get_pos()
                     i = x // TILE_WIDTH
@@ -377,7 +377,7 @@ def findPath(i1,j1,i2,j2):
         if current == end_node:
             break
         for nxt in getAdjacent(current.i, current.j):
-            new_cost = cost_so_far[current] + tile.MOVEMENT_COSTS[current.terrain_type]
+            new_cost = cost_so_far[current] + tile.MOVEMENT_COSTS[nxt.terrain_type]
             if nxt not in cost_so_far or new_cost < cost_so_far[nxt]:
                 cost_so_far[nxt] = new_cost
                 priority = new_cost + path_heuristic(end_node, nxt)
