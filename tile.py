@@ -7,6 +7,7 @@ DENSE_TREES = "dense_trees"
 WATER = "water"
 DEEP_WATER = "deep_water"
 CLIFF = "cliff"
+NONE = "NONE"
 
 ## Terrain colors
 colors = {
@@ -38,7 +39,8 @@ MOVEMENT_COSTS = {
     DENSE_TREES: 20,
     WATER: 500,
     DEEP_WATER: 999,
-    CLIFF: 999
+    CLIFF: 999,
+    NONE: 9999
 }
 
 
@@ -79,7 +81,7 @@ adjacency = {
         WATER:1,
         DEEP_WATER:1
     },
-    "NONE": {
+    NONE: {
         GRASSLAND: 0,
         SAND: 0,
         TREES: 0,

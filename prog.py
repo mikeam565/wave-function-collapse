@@ -305,7 +305,7 @@ def user_draw():
         if pause:
             continue
         else:
-            if countFilled < (COLS*ROWS)-2: # 
+            if countFilled < (COLS*ROWS)-6: # 
                 if mouse_down:
                     x, y = pygame.mouse.get_pos()
                     i = x // TILE_WIDTH
@@ -424,7 +424,7 @@ render(STARTING_X, STARTING_Y)
 ### Select style of drawing here ################################################################
 #################################################################################################
 
-### Render in quadrants from STARTING_X, _Y
+## Render in quadrants from STARTING_X, _Y
 render_screen()
 # update_screen_with_pause()
 
