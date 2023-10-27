@@ -305,54 +305,16 @@ def user_draw():
                                 generate(a,b)
                                 render(a,b)
             else:
-                # put a lil guy down
-                screen.fill("black")
-                render_screen()
-                for trail in trails:
-                    trail.draw()
-                player = pl.Player(screen, "red", player_pos, TILE_WIDTH//2)
-                if not path and pygame.mouse.get_pressed()[2]:
-                    # Get dx and dy to location
-                    x2,y2 = pygame.mouse.get_pos()
-                    i1 = player_pos.x // TILE_WIDTH
-                    j1 = player_pos.y // TILE_WIDTH
-                    i2 = x2 // TILE_WIDTH
-                    j2 = y2 // TILE_WIDTH
-                    if not path:
-                        print(f"Finding path from ({i1},{j1}) to ({i2},{j2})...")
-                        path = findPath(int(i2),int(j2),int(i1),int(j1))
-                        print("Path found!")
-                        curr = terrain_grid[int(i1)][int(j1)]
-                if path and curr in path:
-                    curr = path[curr]
-                    if curr:
-                        player_pos.x = curr.x + PLAYER_CENTERING
-                        player_pos.y = curr.y + PLAYER_CENTERING
-                        (old_x,old_y) = player.update_pos(player_pos)
-                        trail_pos = (int(old_x), int(old_y))
-                        trails.append(Trail(screen, trail_pos, TILE_WIDTH//2))                
-                    else:
-                        path = None
+                (path,curr,trails) = pathfindingGameLoop(path, curr, trails)
         pygame.display.update()
         clock.tick(30)
-
-### update screen with pause
-def update_screen_with_pause():
-    while running:
-        events = pygame.event.get()
-        checkinput(events)
-        if pause:
-            continue
-        else:
-            pygame.display.update()
-        dt = clock.tick(60) / 1000
 
 ### See it happening in game loop (btw this currently double generates the first tile at 0,0)
 def live_draw():
     i = STARTING_X
     j = STARTING_Y
     k = 1
-    render(STARTING_X,STARTING_Y)
+    render(i,j)
     while running:
         i = k // COLS
         j = k % COLS
@@ -403,6 +365,40 @@ def findPath(i1,j1,i2,j2):
                 came_from[nxt] = current
     return came_from
 
+#################################################################################################
+### Pathfinding Game Loop Logic #################################################################
+#################################################################################################
+def pathfindingGameLoop(path, curr, trails):
+    # put a lil guy down
+    screen.fill("black")
+    render_screen()
+    for trail in trails:
+        trail.draw()
+    player = pl.Player(screen, "red", player_pos, TILE_WIDTH//2)
+    if not path and pygame.mouse.get_pressed()[2]:
+        # Get dx and dy to location
+        x2,y2 = pygame.mouse.get_pos()
+        i1 = player_pos.x // TILE_WIDTH
+        j1 = player_pos.y // TILE_WIDTH
+        i2 = x2 // TILE_WIDTH
+        j2 = y2 // TILE_WIDTH
+        if not path:
+            print(f"Finding path from ({i1},{j1}) to ({i2},{j2})...")
+            path = findPath(int(i2),int(j2),int(i1),int(j1))
+            print("Path found!")
+            curr = terrain_grid[int(i1)][int(j1)]
+    if path and curr in path:
+        curr = path[curr]
+        if curr:
+            player_pos.x = curr.x + PLAYER_CENTERING
+            player_pos.y = curr.y + PLAYER_CENTERING
+            (old_x,old_y) = player.update_pos(player_pos)
+            trail_pos = (int(old_x), int(old_y))
+            trails.append(Trail(screen, trail_pos, TILE_WIDTH//2))                
+        else:
+            path = None
+    
+    return (path,curr,trails)
 
 
 
@@ -415,13 +411,12 @@ render(STARTING_X, STARTING_Y)
 
 ## Render in quadrants from STARTING_X, _Y
 render_screen()
-# update_screen_with_pause()
 
-### Draw in order live
+## Draw in order live
 # live_draw() # Only works with STARTING_X and _Y of 0,0 currently
 
 ### attempts an exploration of adjacent tiles. Currently gets stuck.
 # explorative_generation()
 
-### User draws from origin node, then after enough boxes drawn, lets us pathfind through terrain
+### User draws from origin node, then after enough boxes drawn, lets us pathfind through terrain. Pair with render_screen() (for now) to instantly render screen and then be able to pathfind
 user_draw()
