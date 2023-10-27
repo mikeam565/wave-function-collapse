@@ -7,6 +7,8 @@ import random
 from collections import Counter
 import time
 import math
+import player as pl
+from trail import Trail
 
 
 #################################################################################################
@@ -19,7 +21,7 @@ pygame.init()
 # CONSTANTS
 LENGTH = 1000
 HEIGHT = 1000
-TILE_WIDTH = 20
+TILE_WIDTH = 10
 COLS = LENGTH // TILE_WIDTH
 ROWS = LENGTH // TILE_WIDTH
 # STARTING_X = 0
@@ -30,6 +32,12 @@ STARTING_TERRAIN = tile.GRASSLAND
 BRUSH_WIDTH = 10
 countFilled = 1
 PLAYER_CENTERING = TILE_WIDTH // 2
+diagonalMovement = {
+    (1,1):True,
+    (1,-1):True,
+    (-1,1):True,
+    (-1,-1):True
+}
 
 # Some vars
 screen = pygame.display.set_mode((LENGTH,HEIGHT))
@@ -67,6 +75,18 @@ def getAdjacent(i, j):
         for dy in range( -1 if (j > 0) else 0,2 if (j < m-1) else 1):
             if (dx != 0 or dy != 0):
                 v.append(terrain_grid[i + dx][j + dy])
+    adjacent_tiles[i][j] = v
+    return v
+
+def getAdjacentPathing(i,j):
+    global terrain_grid
+    global adjacent_tiles
+    global n, m
+    global diagonalMovement
+    v = []
+    for (di,dj) in [(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]:
+        if (i+di)>=0 and (i+di)<len(terrain_grid) and (j+dj)>=0 and (j+dj)<len(terrain_grid[i+di]):
+            v.append((terrain_grid[i + di][j + dj],(di,dj) in diagonalMovement))
     adjacent_tiles[i][j] = v
     return v
 
@@ -118,7 +138,7 @@ def generate(i,j):
 ### Rendering ###################################################################################
 #################################################################################################
 
-# Render terrain
+# Render tile based off it's current terrain_type
 def render(i, j):
     global terrain_grid
     if terrain_grid[i][j].terrain_type == "NONE" or i>ROWS or j>COLS or i<0 or j<0:
@@ -127,7 +147,7 @@ def render(i, j):
     color = tile.colors[curr.terrain_type]
     pygame.draw.rect(screen, color, curr.rect)
 
-### Pre-render all, going sequentially (only works with starting at 0,0)
+### Pre-render all in quadrants
 def render_screen():
     render(STARTING_X,STARTING_Y)
     for i in range(STARTING_X, n):
@@ -278,6 +298,7 @@ def user_draw():
     j = -1
     path = None
     curr = None
+    trails = []
     while running:
         events = pygame.event.get()
         checkinput(events)
@@ -296,8 +317,12 @@ def user_draw():
                                 render(a,b)
             else:
                 # put a lil guy down
-                pygame.draw.circle(screen, "red", player_pos, TILE_WIDTH//2)
-                if pygame.mouse.get_pressed()[2]:
+                screen.fill("black")
+                render_screen()
+                for trail in trails:
+                    trail.draw()
+                player = pl.Player(screen, "red", player_pos, TILE_WIDTH//2)
+                if not path and pygame.mouse.get_pressed()[2]:
                     # Get dx and dy to location
                     x2,y2 = pygame.mouse.get_pos()
                     i1 = player_pos.x // TILE_WIDTH
@@ -306,19 +331,21 @@ def user_draw():
                     j2 = y2 // TILE_WIDTH
                     if not path:
                         print(f"Finding path from ({i1},{j1}) to ({i2},{j2})...")
-                        path = findPath(int(i1),int(j1),int(i2),int(j2))
+                        path = findPath(int(i2),int(j2),int(i1),int(j1))
                         print("Path found!")
-                        curr = terrain_grid[int(i2)][int(j2)]
+                        curr = terrain_grid[int(i1)][int(j1)]
                 if path and curr in path:
                     curr = path[curr]
                     if curr:
                         player_pos.x = curr.x + PLAYER_CENTERING
                         player_pos.y = curr.y + PLAYER_CENTERING
-                        pygame.draw.circle(screen, "red", player_pos, TILE_WIDTH//2)
+                        (old_x,old_y) = player.update_pos(player_pos)
+                        trail_pos = (int(old_x), int(old_y))
+                        trails.append(Trail(screen, trail_pos, TILE_WIDTH//2))                
                     else:
                         path = None
         pygame.display.update()
-    dt = clock.tick(144) / 1000
+        clock.tick(30)
 
 ### update screen with pause
 def update_screen_with_pause():
@@ -359,6 +386,7 @@ def live_draw():
 
 def path_heuristic(t1, t2):
     return abs(t1.x - t2.x) + abs(t1.y - t2.y)
+    # return 0
 
 # ref: https://www.redblobgames.com/pathfinding/a-star/introduction.html
 def findPath(i1,j1,i2,j2):
@@ -376,8 +404,9 @@ def findPath(i1,j1,i2,j2):
         current = frontier.get()
         if current == end_node:
             break
-        for nxt in getAdjacent(current.i, current.j):
-            new_cost = cost_so_far[current] + tile.MOVEMENT_COSTS[current.terrain_type]
+        for (nxt,isDiagMov) in getAdjacentPathing(current.i, current.j):
+            diag_cost = (1+math.sqrt(2)) if isDiagMov else 1
+            new_cost = cost_so_far[current] + (tile.MOVEMENT_COSTS[current.terrain_type] * diag_cost)
             if nxt not in cost_so_far or new_cost < cost_so_far[nxt]:
                 cost_so_far[nxt] = new_cost
                 priority = new_cost + path_heuristic(end_node, nxt)
@@ -405,5 +434,5 @@ render_screen()
 ### attempts an exploration of adjacent tiles. Currently gets stuck.
 # explorative_generation()
 
-### User draws from origin node
+### User draws from origin node, then after enough boxes drawn, lets us pathfind through terrain
 user_draw()

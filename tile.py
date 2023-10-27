@@ -36,7 +36,7 @@ MOVEMENT_COSTS = {
     SAND: 1,
     TREES: 5,
     DENSE_TREES: 20,
-    WATER: 999,
+    WATER: 500,
     DEEP_WATER: 999,
     CLIFF: 999
 }
