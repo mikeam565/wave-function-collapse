@@ -65,24 +65,13 @@ for i in range(n):
 #################################################################################################
 
 # Function that returns all the adjacent elements
-# Note: tiles should probably have an adjacency list
-def getAdjacent(i, j):
-    global terrain_grid
-    global adjacent_tiles
-    global n, m
-    v = []
-    for dx in range(-1 if (i > 0) else 0 , 2 if (i < n-1) else 1):
-        for dy in range( -1 if (j > 0) else 0,2 if (j < m-1) else 1):
-            if (dx != 0 or dy != 0):
-                v.append(terrain_grid[i + dx][j + dy])
-    adjacent_tiles[i][j] = v
-    return v
-
-def getAdjacentPathing(i,j):
+def getAdjacent(i,j):
     global terrain_grid
     global adjacent_tiles
     global n, m
     global diagonalMovement
+    if isinstance(adjacent_tiles[i][j], list):
+        return adjacent_tiles[i][j]
     v = []
     for (di,dj) in [(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]:
         if (i+di)>=0 and (i+di)<len(terrain_grid) and (j+dj)>=0 and (j+dj)<len(terrain_grid[i+di]):
@@ -97,12 +86,12 @@ def generate(i,j):
         return
     adj = getAdjacent(i,j)
     allNone = True
-    for a in adj:
+    for (a,_) in adj:
         if a.terrain_type != "NONE":
             allNone = False
     if allNone:
         return
-    adj.append(terrain_grid[i][j])
+    adj.append((terrain_grid[i][j],False))
     target = len(adj) # I want len(adj) occurrences of a terrain for it to be considered viable
     allAdj = []
     probabilities = {
@@ -113,7 +102,7 @@ def generate(i,j):
         tile.WATER: 0,
         tile.DEEP_WATER: 0
     }
-    for tle in adj:
+    for (tle,_) in adj:
         for typ in adjacency[tle.terrain_type]:
             probabilities[typ] += adjacency[tle.terrain_type][typ]
         allAdj += list(adjacency[tle.terrain_type].keys())
@@ -208,7 +197,7 @@ def findNextCoordinates1(terrain_grid, i,j):
         if terrain_grid[temp_i][temp_j].terrain_type == "NONE":
             v = getAdjacent(temp_i, temp_j)
             countPopulated = 0
-            for tle in v:
+            for (tle,_) in v:
                 if tle.terrain_type != "NONE":
                     countPopulated += 1
             if countPopulated > maxPopulated[-1]:
@@ -224,7 +213,7 @@ def findNextCoordinates1(terrain_grid, i,j):
         if terrain_grid[temp_i][temp_j].terrain_type == "NONE":
             v = getAdjacent(temp_i, temp_j)
             countPopulated = 0
-            for tle in v:
+            for (tle,_) in v:
                 if tle.terrain_type != "NONE":
                     countPopulated += 1
             if countPopulated > maxPopulated[-1]:
@@ -240,7 +229,7 @@ def findNextCoordinates1(terrain_grid, i,j):
         if terrain_grid[temp_i][temp_j].terrain_type == "NONE":
             v = getAdjacent(temp_i, temp_j)
             countPopulated = 0
-            for tle in v:
+            for (tle,_) in v:
                 if tle.terrain_type != "NONE":
                     countPopulated += 1
             if countPopulated > maxPopulated[-1]:
@@ -256,7 +245,7 @@ def findNextCoordinates1(terrain_grid, i,j):
         if terrain_grid[temp_i][temp_j].terrain_type == "NONE":
             v = getAdjacent(temp_i, temp_j)
             countPopulated = 0
-            for tle in v:
+            for (tle,_) in v:
                 if tle.terrain_type != "NONE":
                     countPopulated += 1
             if countPopulated > maxPopulated[-1]:
@@ -404,7 +393,7 @@ def findPath(i1,j1,i2,j2):
         current = frontier.get()
         if current == end_node:
             break
-        for (nxt,isDiagMov) in getAdjacentPathing(current.i, current.j):
+        for (nxt,isDiagMov) in getAdjacent(current.i, current.j):
             diag_cost = (1+math.sqrt(2)) if isDiagMov else 1
             new_cost = cost_so_far[current] + (tile.MOVEMENT_COSTS[current.terrain_type] * diag_cost)
             if nxt not in cost_so_far or new_cost < cost_so_far[nxt]:
